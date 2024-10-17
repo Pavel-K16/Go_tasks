@@ -70,11 +70,6 @@ fmt.Print("value=",val2,": ",i[1])
 fmt.Print("value=",val3,": ",i[2])
 }
 
-
-
-
-
-
 }
 
 
