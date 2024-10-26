@@ -12,6 +12,12 @@ import (
 	"strings"
 )
 
+type Config struct {
+	Log_file_name string `json:"log_file_name"`
+	URL           string
+	Nums          []float64 `json:"nums"`
+}
+
 func main() {
 	log_file := CreateLogfile()
 	defer log_file.Close()
@@ -19,19 +25,16 @@ func main() {
 	var nums []float64
 	URL := "https://developer.mozilla.org/ru/docs/Web/HTTP/Status"
 
-	fmt.Println("Для ввода массива с клавиатуры введите k, а для считывания массива из JSON файла f.")
-	var symbol rune
-	symbol, _, _ = bufio.NewReader(os.Stdin).ReadRune()
-
+	symbol := os.Args[1]
 	switch symbol {
-	case 'k':
+	case "k":
 		nums, err := Input()
 		if err == nil {
 			log.Println("Maccив успешно считан из терминала.")
 			log.Println("Массив:", nums)
 			Sum(nums)
 		}
-	case 'f':
+	case "f":
 		if err := Decoding(&nums); err == nil {
 			log.Println("Массив чисел успешно считан из JSON файла.")
 			log.Println("Массив:", nums)
@@ -46,6 +49,7 @@ func main() {
 }
 func Input() ([]float64, error) {
 	var nums []float64
+	fmt.Println("Введите числа массива с клавиатуры:")
 	text, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		log.Println("Не удалось считать числа:", err)
