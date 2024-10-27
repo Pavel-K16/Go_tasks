@@ -21,10 +21,10 @@ type Config struct {
 
 func main() {
 	var config Config
-
+ 
 	lf := createLogFile("log.txt")
 	defer lf.Close()
-	stdin, err := parseArgs(os.Args[1])
+	stdin, err := parseArgs(os.Args)
 	if err != nil {
 		log.Println("Для считывания массива из файла используйте --file, а из stdin --stdin", err)
 		os.Exit(1)
@@ -56,13 +56,19 @@ func main() {
 		}
 	}
 
-	responceStatus(config.URL)
+	if err := responceStatus(config.URL); err != nil{
+		log.Println("Ошибка при выполнении Get запроса:", err)
+	}
 }
 
-func parseArgs(args string) (bool, error) {
+func parseArgs(args []string) (bool, error) {
+	if len(args) != 2 {
+		err := fmt.Errorf("ошибка: недопустимое значение конфигурации %s", args)
+		return false, err
+	}
 	var flag bool
 	var err error
-	switch args {
+	switch args[1] {
 	case "--file":
 		flag = false
 	case "--stdin":
@@ -126,11 +132,12 @@ func sum(nums []float64) {
 	}
 	log.Println("Посчитанная сумма всех чисел в массиве:", sum)
 }
-func responceStatus(URL string) {
+func responceStatus(URL string) error {
+	var err error 
 	if URL != "" {
 		resp, err := http.Get(URL)
 		if err != nil {
-			log.Println("Ошибка при выполнении Get запроса:", err)
+			return err
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
@@ -141,4 +148,5 @@ func responceStatus(URL string) {
 	} else {
 		log.Println("Получена пустая строка вместо URL ссылки")
 	}
+	return err
 }
