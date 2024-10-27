@@ -1,3 +1,1 @@
-2024/10/26 22:32:51 Некорректный ввод чисел: strconv.ParseFloat: parsing "": invalid syntax
-2024/10/26 22:32:51 Не удалось посчитать сумму чисел: strconv.ParseFloat: parsing "": invalid syntax
-2024/10/26 22:32:51 Статус ответа: 200; URL: https://developer.mozilla.org/ru/docs/Web/HTTP/Status
+2024/10/27 20:29:56 Для считывания массива из файла используйте --file, а из stdin --stdin ошибка: недопустимое значение конфигурации --

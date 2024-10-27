@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -19,104 +20,125 @@ type Config struct {
 }
 
 func main() {
-	log_file := CreateLogfile()
-	defer log_file.Close()
+	var config Config
 
-	var nums []float64
-	URL := "https://developer.mozilla.org/ru/docs/Web/HTTP/Status"
-
-	symbol := os.Args[1]
-	switch symbol {
-	case "k":
-		nums, err := Input()
-		if err == nil {
-			log.Println("Maccив успешно считан из терминала.")
-			log.Println("Массив:", nums)
-			Sum(nums)
-		}
-	case "f":
-		if err := Decoding(&nums); err == nil {
-			log.Println("Массив чисел успешно считан из JSON файла.")
-			log.Println("Массив:", nums)
-			Sum(nums)
-		}
-	default:
-		log.Println("Неверный формат выбора ввода для считывания массива.")
+	lf := createLogFile("log.txt")
+	defer lf.Close()
+	stdin, err := parseArgs(os.Args[1])
+	if err != nil {
+		log.Println("Для считывания массива из файла используйте --file, а из stdin --stdin", err)
+		os.Exit(1)
 	}
-	ResponceStatus(&URL)
-	file_info, _ := os.ReadFile("log.txt")
-	fmt.Println(string(file_info))
+
+	if err = decoding(&config); err != nil {
+		log.Println("Ошибка при считывании из json файла:", err)
+		os.Exit(1)
+	}
+
+	if config.Log_file_name != "" {
+		os.Rename("log.txt", config.Log_file_name)
+	}
+
+	if stdin {
+		if config.Nums, err = input(); err != nil {
+			log.Println("Не удалось считать массив чисел из стандартного ввода", err)
+		} else {
+			log.Println("Массив успешно считан из stdin")
+			sum(config.Nums)
+		}
+	} else {
+		if err = checkConfig(&config); err != nil {
+			log.Println("Ошибка массива", err)
+		} else {
+			log.Println("Массив успешно считан из json файла")
+			log.Println("Массив:", config.Nums)
+			sum(config.Nums)
+		}
+	}
+
+	responceStatus(config.URL)
 }
-func Input() ([]float64, error) {
+
+func parseArgs(args string) (bool, error) {
+	var flag bool
+	var err error
+	switch args {
+	case "--file":
+		flag = false
+	case "--stdin":
+		flag = true
+	default:
+		flag = false
+		err = fmt.Errorf("ошибка: недопустимое значение конфигурации %s", args)
+	}
+	return flag, err
+}
+
+func checkConfig(config *Config) error {
+	var err error
+	if len(config.Nums) == 0 {
+		err = errors.New("ошибка: в файле congig.json задан пустой массив")
+	}
+	return err
+}
+func input() ([]float64, error) {
 	var nums []float64
-	fmt.Println("Введите числа массива с клавиатуры:")
+	fmt.Println("Введите числа массива с клавиатуры. Все числа должны разделяться пробелом.\nПример ввода:\n1 2 3 4 5 ")
 	text, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
-		log.Println("Не удалось считать числа:", err)
-		log.Println("Не удалось посчитать сумму чисел:", err)
 		return nums, err
 	}
 	text = strings.TrimSpace(text)
 	numbers := strings.Split(text, " ")
 	nums = make([]float64, len(numbers))
 	for i, val := range numbers {
-		nums[i], _ = strconv.ParseFloat(val, 64)
-		if _, err = strconv.ParseFloat(val, 64); err != nil {
-			log.Println("Некорректный ввод чисел:", err)
-			log.Println("Не удалось посчитать сумму чисел:", err)
+		nums[i], err = strconv.ParseFloat(val, 64)
+		if err != nil {
 			break
 		}
 	}
 	return nums, err
 }
 
-func CreateLogfile() *os.File {
-	log_file, err := os.Create("log.txt")
+func createLogFile(fname string) *os.File {
+	lf, err := os.Create(fname)
 	if err != nil {
-		log.Fatal("Ошибка при создании log.txt файла.", err)
+		log.Fatal("Ошибка при создании", fname, " файла.", err)
 	}
-	if _, err = os.Open("log.txt"); err != nil {
-		log.Fatal("Ошибка при открытии log.txt файла.", err)
-	}
-	log.SetOutput(log_file)
-	return log_file
+	multiWriter := io.MultiWriter(os.Stdout, lf)
+	log.SetOutput(multiWriter)
+	return lf
 }
-func Decoding(nums *[]float64) error {
-	file, err := os.Open("test.json")
+func decoding(config *Config) error {
+	data, err := os.ReadFile("config.json")
 	if err != nil {
-		log.Println("Ошибка при открытии json файла:", err)
+		return err
 	}
-	defer file.Close()
-
-	rd := bufio.NewReader(file)
-	data, err := rd.ReadString('\n')
-	if err != nil && err != io.EOF {
-		log.Println("Ошибка при считывании из json файла", err)
+	if err = json.Unmarshal([]byte(data), config); err != nil {
+		return err
 	}
-	if err = json.Unmarshal([]byte(data), nums); err != nil {
-		log.Println("Ошибка при декодировании:", err)
-	}
-
-	return err
+	return nil
 }
-func Sum(nums []float64) {
+func sum(nums []float64) {
 	sum := 0.0
 	for _, val := range nums {
 		sum += val
 	}
 	log.Println("Посчитанная сумма всех чисел в массиве:", sum)
 }
-func ResponceStatus(URL *string) {
-	resp, err := http.Get(*URL)
-
-	if err != nil {
-		log.Println("Ошибка при Get запросе:", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusOK {
-		log.Println("Статус ответа: 200;", "URL:", *URL)
+func responceStatus(URL string) {
+	if URL != "" {
+		resp, err := http.Get(URL)
+		if err != nil {
+			log.Println("Ошибка при выполнении Get запроса:", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			log.Println("Статус ответа: 200;", "URL:", URL)
+		} else {
+			log.Println("Неожиданный статус ответа:", resp.StatusCode, "Ожидаемый статус ответа: 200.", "URL:", URL)
+		}
 	} else {
-		log.Println("Неожиданный статус ответа:", resp.StatusCode, "Ожидаемый статус ответа: 200.", "URL:", *URL)
+		log.Println("Получена пустая строка вместо URL ссылки")
 	}
 }
