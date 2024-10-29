@@ -21,10 +21,10 @@ type Config struct {
 
 func main() {
 	var config Config
-
+ 
 	lf := createLogFile("log.txt")
 	defer lf.Close()
-	stdin, err := parseArgs(os.Args[1])
+	stdin, err := parseArgs(os.Args)
 	if err != nil {
 		log.Println("Для считывания массива из файла используйте --file, а из stdin --stdin", err)
 		os.Exit(1)
@@ -56,24 +56,30 @@ func main() {
 		}
 	}
 
-	responceStatus(config.URL)
+	if err := responceStatus(config.URL); err != nil{
+		log.Println("Ошибка при выполнении Get запроса:", err)
+	}
 }
-
-func parseArgs(args string) (bool, error) {
+// Функция ниже считывает аргументы командной строки
+func parseArgs(args []string) (bool, error) {
+	if len(args) != 2 {
+		err := fmt.Errorf("ошибка: недопустимое значение конфигурации: %s", args[1:])
+		return false, err
+	}
 	var flag bool
 	var err error
-	switch args {
+	switch args[1] {
 	case "--file":
 		flag = false
 	case "--stdin":
 		flag = true
 	default:
 		flag = false
-		err = fmt.Errorf("ошибка: недопустимое значение конфигурации %s", args)
+		err = fmt.Errorf("ошибка: недопустимое значение конфигурации: %s", args[1:])
 	}
 	return flag, err
 }
-
+// Функция ниже проверяет json файл на корректный ввод массива
 func checkConfig(config *Config) error {
 	var err error
 	if len(config.Nums) == 0 {
@@ -81,9 +87,10 @@ func checkConfig(config *Config) error {
 	}
 	return err
 }
+// Функция ниже считывает и обрабатывает массив из stdin
 func input() ([]float64, error) {
 	var nums []float64
-	fmt.Println("Введите числа массива с клавиатуры. Все числа должны разделяться пробелом.\nПример ввода:\n1 2 3 4 5 ")
+	fmt.Println("Введите числа массива с клавиатуры. Все числа должны разделяться пробелом.\nПример ввода пяти чисел:\n1 2 3 4 5 ")
 	text, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		return nums, err
@@ -109,6 +116,7 @@ func createLogFile(fname string) *os.File {
 	log.SetOutput(multiWriter)
 	return lf
 }
+// Функция ниже десериализирует json файл в структуру типа Config  
 func decoding(config *Config) error {
 	data, err := os.ReadFile("config.json")
 	if err != nil {
@@ -126,11 +134,13 @@ func sum(nums []float64) {
 	}
 	log.Println("Посчитанная сумма всех чисел в массиве:", sum)
 }
-func responceStatus(URL string) {
+// Функция ниже делает Get запрос на указанный URL в json файле и выводит статус ответа
+func responceStatus(URL string) error {
+	var err error 
 	if URL != "" {
 		resp, err := http.Get(URL)
 		if err != nil {
-			log.Println("Ошибка при выполнении Get запроса:", err)
+			return err
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
@@ -141,4 +151,5 @@ func responceStatus(URL string) {
 	} else {
 		log.Println("Получена пустая строка вместо URL ссылки")
 	}
+	return err
 }
