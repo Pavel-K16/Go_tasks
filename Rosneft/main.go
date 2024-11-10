@@ -21,7 +21,7 @@ type Config struct {
 
 func main() {
 	var config Config
- 
+
 	lf := createLogFile("log.txt")
 	defer lf.Close()
 	stdin, err := parseArgs(os.Args)
@@ -56,10 +56,11 @@ func main() {
 		}
 	}
 
-	if err := responceStatus(config.URL); err != nil{
+	if err := responceStatus(config.URL); err != nil {
 		log.Println("Ошибка при выполнении Get запроса:", err)
 	}
 }
+
 // Функция ниже считывает аргументы командной строки
 func parseArgs(args []string) (bool, error) {
 	if len(args) != 2 {
@@ -79,6 +80,7 @@ func parseArgs(args []string) (bool, error) {
 	}
 	return flag, err
 }
+
 // Функция ниже проверяет json файл на корректный ввод массива
 func checkConfig(config *Config) error {
 	var err error
@@ -87,6 +89,7 @@ func checkConfig(config *Config) error {
 	}
 	return err
 }
+
 // Функция ниже считывает и обрабатывает массив из stdin
 func input() ([]float64, error) {
 	var nums []float64
@@ -116,7 +119,8 @@ func createLogFile(fname string) *os.File {
 	log.SetOutput(multiWriter)
 	return lf
 }
-// Функция ниже десериализирует json файл в структуру типа Config  
+
+// Функция ниже десериализирует json файл в структуру типа Config
 func decoding(config *Config) error {
 	data, err := os.ReadFile("config.json")
 	if err != nil {
@@ -134,9 +138,10 @@ func sum(nums []float64) {
 	}
 	log.Println("Посчитанная сумма всех чисел в массиве:", sum)
 }
+
 // Функция ниже делает Get запрос на указанный URL в json файле и выводит статус ответа
 func responceStatus(URL string) error {
-	var err error 
+	var err error
 	if URL != "" {
 		resp, err := http.Get(URL)
 		if err != nil {
