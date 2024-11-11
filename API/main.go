@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -17,7 +17,7 @@ import (
     Descritpion string `gorm:"type:text"`
 }*/
 
-type jopa struct {
+type phones struct {
 	Id          int     `gorm:"primaryKey;autoIncrement"`
 	Name        string  `gorm:"type:varchar(10);not null"`
 	Description string  `gorm:"type:text"`
@@ -83,10 +83,10 @@ func getInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	conn, _ := db.DB()
 	defer conn.Close()
-	var phone jopa
+	var phone phones
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["id"])
 	db.Find(&phone, "id = ?", id)
-	s := fmt.Sprintf(phone.Name, phone.Description, phone.Id, phone.Price)
-	w.Write([]byte(s))
+	info, _ := json.MarshalIndent(phone, "", "  ")
+	w.Write(info)
 }
