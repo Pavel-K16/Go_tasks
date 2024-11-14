@@ -82,12 +82,54 @@ func main() {
 	r.HandleFunc("/category/{id}", updateCategoryHandler).Methods("PUT")
 	r.HandleFunc("/item/{id}", deleteProductHandler).Methods("DELETE")
 	r.HandleFunc("/category/{id}", deleteCategoryHandler).Methods("DELETE")
-
+	r.HandleFunc("/item", showAllProductsHandler).Methods("GET")
+	r.HandleFunc("/category", showAllCategoryHandler).Methods("GET")
 	err := http.ListenAndServe(serv, r)
 	if err != nil {
 		log.Fatal("Ошибка при запуске сервера", err)
 	}
 }
+
+func showAllCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := gorm.Open(postgres.Open(dsn))
+	if err != nil {
+		panic(err.Error())
+	}
+	conn, _ := db.DB()
+	defer conn.Close()
+
+	var category []productCategory
+
+	// Получение всех записей из таблицы products
+	if err := db.Table("productcategory").Find(&category).Error; err != nil {
+		fmt.Println("Error fetching products:", err)
+		return
+	}
+	info, _ := json.MarshalIndent(category, " ", "  ")
+	w.Write([]byte("Всё записи таблицы productcategory:"))
+	w.Write(info)
+}
+
+func showAllProductsHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := gorm.Open(postgres.Open(dsn))
+	if err != nil {
+		panic(err.Error())
+	}
+	conn, _ := db.DB()
+	defer conn.Close()
+
+	var products []product
+
+	// Получение всех записей из таблицы products
+	if err := db.Table("product").Find(&products).Error; err != nil {
+		fmt.Println("Error fetching products:", err)
+		return
+	}
+	info, _ := json.MarshalIndent(products, " ", "  ")
+	w.Write([]byte("Всё записи таблицы product:"))
+	w.Write(info)
+}
+
 func deleteCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
@@ -136,7 +178,6 @@ func updateCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	var item productCategory
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["id"])
-
 	json.NewDecoder(r.Body).Decode(&item)
 	update := item.NotNull()
 	db.Model(&product{}).Where("id = ?", id).Updates(update)
@@ -154,11 +195,15 @@ func updateProductHandler(w http.ResponseWriter, r *http.Request) {
 	var item product
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["id"])
-
+	fmt.Println(id)
+	result := db.Table("product").Find(&item, "id = ?", id)
+	if result.RowsAffected == 0 {
+		w.Write([]byte("Запись с данным id не была найдена"))
+		return
+	}
 	json.NewDecoder(r.Body).Decode(&item)
 	update := item.NotNull()
 	db.Model(&product{}).Table("product").Where("id = ?", id).Updates(update)
-
 	w.Write([]byte("Всё прошло успешно, изменения были приняты"))
 }
 
@@ -185,10 +230,10 @@ func createProductHandler(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	var item product
-	json.NewDecoder(r.Body).Decode(&item)
+	json.NewDecoder(r.Body).Decode(&item) // Проверить пустое тело запроса или нет
 
 	db.Table("product").Create(&item)
-	w.Write([]byte("ergergerg"))
+	w.Write([]byte("Создали запись!"))
 }
 
 func getInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -202,7 +247,11 @@ func getInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var catitem productCategory
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["id"])
-	db.Table("product").Find(&item, "id = ?", id)
+	result := db.Table("product").Find(&item, "id = ?", id)
+	if result.RowsAffected == 0 {
+		w.Write([]byte("Запись с данным id не была найдена"))
+		return
+	}
 	fmt.Println(item)
 	db.Table("productcategory").Find(&catitem, "id = ?", item.CategoryId) //!!!
 
