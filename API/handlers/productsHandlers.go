@@ -3,6 +3,7 @@ package handlers
 import (
 	e "home/pavel/Go_tasks/API/entities"
 	h_ "home/pavel/Go_tasks/API/handlers/helpers"
+	"io"
 	"net/http"
 )
 
@@ -28,7 +29,9 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	var table e.Product
-	s := h_.Update(db, r, "product", table)
+	inf, _ := io.ReadAll(r.Body)
+
+	s := h_.Update(db, w, r, inf, "product", table)
 	w.Write([]byte(s))
 }
 func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,5 +39,6 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	var table e.Product
-	h_.Create(db, w, r, "product", table)
+	inf, _ := io.ReadAll(r.Body)
+	h_.Create(db, w, inf, "product", table)
 }
