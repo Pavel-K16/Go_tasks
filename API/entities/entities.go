@@ -43,3 +43,7 @@ func (item Product) NotNull() map[string]interface{} {
 	}
 	return toupdate
 }
+
+type Table interface {
+	NotNull() map[string]interface{}
+}

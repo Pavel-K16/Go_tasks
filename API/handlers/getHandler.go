@@ -5,6 +5,7 @@ import (
 	"fmt"
 	e "home/pavel/Go_tasks/API/entities"
 	h_ "home/pavel/Go_tasks/API/handlers/helpers"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -19,7 +20,11 @@ func GetInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["id"])
-
+	if id <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "Error: неверный данные в строке запроса")
+		return
+	}
 	result := db.Table("product").Find(&ptable, "id = ?", id)
 	if result.RowsAffected == 0 {
 		w.Write([]byte("Запись с данным id не была найдена"))
@@ -31,7 +36,10 @@ func GetInfoHandler(w http.ResponseWriter, r *http.Request) {
 	db.Table("productcategory").Find(&ctable, "id = ?", ptable.CategoryId) //!!!
 	info_, err := json.MarshalIndent(ctable, "", "  ")
 	if err != nil {
-		fmt.Println("НЕ маршалит категорию")
+		log.Println("Ошибка при декодировании данных")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Ошибка при декодировании данных"))
+		return
 	}
 
 	w.Write([]byte("Наименование товара:\n"))

@@ -1,13 +1,13 @@
 package main
 
 import (
+	h "home/pavel/Go_tasks/API/handlers"
 	"log"
 	"net/http"
+	"os"
 
-	e "home/pavel/Go_tasks/API/entities"
-	h "home/pavel/Go_tasks/API/handlers"
-
-	"github.com/gorilla/mux" ///!!!!!!!!!!
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 // curl -X POST -H "Content-Type: application/json" -d '{"Name":"John Doe","Description":"john@example.com", "Price":23443,"categoryid":1}' http://localhost:8080/item
@@ -18,8 +18,12 @@ import (
 // curl -X POST -H "Content-Type: application/json" -d '{"Name":"John Doe","Description":"john@example.com"}' http://localhost:8080/category
 // curl -X PUT -H "Content-Type: application/json" -d '{"Name":"Дорогие телефоны", "description":"В этой категории телефоны дороже 100к"}' http://localhost:8080/category/2
 // curl -X DELETE http://localhost:8080/category/2
-func main() {
 
+func main() {
+	err := godotenv.Load("env/dsn.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	r := mux.NewRouter()
 
 	r.HandleFunc("/item/{id}", h.GetInfoHandler).Methods("GET")
@@ -34,8 +38,8 @@ func main() {
 
 	r.HandleFunc("/item/{id}", h.DeleteProductHandler).Methods("DELETE")
 	r.HandleFunc("/category/{id}", h.DeleteCategoryHandler).Methods("DELETE")
-
-	err := http.ListenAndServe(e.Serv, r)
+	serv := os.Getenv("SERV")
+	err = http.ListenAndServe(serv, r)
 	if err != nil {
 		log.Fatal("Ошибка при запуске сервера", err)
 	}
