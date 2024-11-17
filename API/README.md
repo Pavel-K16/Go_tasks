@@ -1,7 +1,7 @@
 # Документация к программе main.go 
 ### Data Base
-Данный сервис взаимодействует с базой данных `postgres`. Для начала работы необходимо создать базу данных или успользовать установленную по умолчанию. Далее текущей базе данных необходимо создать две таблицы (сущности), которые соотвествуют условию данного задания. 
-#### Таблица содержащая информацию о товарах должна строго называться `product`, а таблица содержащую информацию о категориях товаров должна строго называться `productcaregory`.
+Данный сервис взаимодействует с базой данных `postgres`. Для начала работы необходимо создать базу данных или использовать установленную по умолчанию. Далее в текущей базе данных необходимо создать две таблицы (сущности), которые соотвествуют условию данного задания. 
+#### Таблица содержащая информацию о товарах должна строго называться `product`, а таблица содержащаю информацию о категориях товаров должна строго называться `productcategory`.
 ### DSN
 Чтобы подключиться к созданной БД необходимо использовать строку подключения `dsn`. 
 
@@ -47,4 +47,34 @@ SSL="disable"
 -  `http://localhost:8080/category` -- получение информации о всех категориях продуктов из таблицы `productсategory`.
 -  `http://localhost:8080/item` -- получение информации о всех продуктах из таблицы `product`.
 
-#### 
+#### `POST` запросы:
+Напомним, что `PUT` и `POST` запросы осуществляются с помощью `curl` параметров через терминал.
+- `curl -X POST -H "Content-Type: application/json" -d '{"Name":"Iphone 6","Description":"Mobile phone", "Price":25000,"categoryid":1}' http://localhost:8080/item` -- данный запрос используется для создания записи в таблице `product`. Важно учесть, что поле `"categoryid"` должно быть не пустым и содержать значение, по которому можно найти запись в таблице `productcategory`. Иначе программа выдаст ошибку. В качестве тела запроса передаётся `json` файл, пример его заполнения представлен в запросе. Также поле `name` должно содержать непустое значение. 
+- `curl -X POST -H "Content-Type: application/json" -d '{"Name":"Phones", "Description":"The best phones"}' http://localhost:8080/category` -- данный запрос используется для создания записи в таблице `productcategory`. Поле `name` также должно быть ненулевым.
+#### `PUT` запросы:
+- `curl -X PUT -H "Content-Type: application/json" -d '{"Name":"Iphone 16", "description":"Очень хороший телефон", "Price": 96500,"categoryid":1}' http://localhost:8080/item/{id}` -- данный запрос используется для обновление записи в таблице `product`, где `{id}` -- уникальный номер записи. Для корректной работы запись под данным номером должная существовать. Если оставить одно из полей `json` файла пустым, то это поле в записи не будет обновлено.
+- `curl -X PUT -H "Content-Type: application/json" -d '{"Name":"Дорогие телефоны", "description":"В этой категории телефоны дороже 100к"}' http://localhost:8080/category/{id}` -- аналогичный запрос для создания записи в таблице `productcategory`.
+#### `DELETE` запросы:
+- `curl -X DELETE http://localhost:8080/item/{id}` -- данный запрос удаляет запись из таблицы `product`, где `{id}` -- заданный номер записи.
+- `curl -X DELETE http://localhost:8080/category/{id}` -- аналогичный запрос для таблицы `productcategory`. 
+
+### Краткая сводка запросов
+#### `GET:`
+- `http://localhost:8080/item/{id}`
+- `curl http://localhost:8080/item/{id}`
+- `http://localhost:8080/category`
+- `curl http://localhost:8080/category`
+- `http://localhost:8080/item`
+- `curl http://localhost:8080/item`
+#### `POST:`
+- `curl -X POST -H "Content-Type: application/json" -d '{"Name":"Iphone 6","Description":"Mobile phone", "Price":25000,"categoryid":1}' http://localhost:8080/item`
+- `curl -X POST -H "Content-Type: application/json" -d '{"Name":"Phones", "Description":"The best phones"}' http://localhost:8080/category`
+#### `PUT:`
+- `curl -X PUT -H "Content-Type: application/json" -d '{"Name":"Iphone 16", "description":"Очень хороший телефон", "Price": 96500,"categoryid":1}' http://localhost:8080/item/{id}`
+- `curl -X PUT -H "Content-Type: application/json" -d '{"Name":"Дорогие телефоны", "description":"В этой категории телефоны дороже 100к"}' http://localhost:8080/category/{id}`
+#### `DELETE:`
+- `curl -X DELETE http://localhost:8080/item/{id}`
+- `curl -X DELETE http://localhost:8080/category/{id}`
+
+### Dockerfile 
+#### Хотел завернуть весь сервис в докер файл, но не хватило времени. Займусь этим позже. 
