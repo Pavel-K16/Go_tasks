@@ -1,9 +1,9 @@
 package helpers
 
 import (
+	e "API/entities"
 	"encoding/json"
 	"fmt"
-	e "home/pavel/Go_tasks/API/entities"
 	"log"
 	"net/http"
 	"strconv"
@@ -99,7 +99,6 @@ func Create(db *gorm.DB, w http.ResponseWriter, info []byte, name string, table 
 	case e.ProductCategory:
 		Val := v
 		err := json.Unmarshal(info, &Val)
-		fmt.Println(Val)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("Переданы некорректные данные\n"))

@@ -1,9 +1,10 @@
 package helpers
 
 import (
+	e "API/entities"
+	d "API/env/envHelpers"
 	"database/sql"
 	"fmt"
-	e "home/pavel/Go_tasks/API/entities"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +15,11 @@ import (
 	"gorm.io/gorm"
 )
 
+var dsn string
+
+func MakeDsn() {
+	dsn = d.Dsn()
+}
 func FindId(db *gorm.DB, w http.ResponseWriter, r *http.Request, name string, table e.Table) (uint, error) {
 	var count int64
 	params := mux.Vars(r)
@@ -33,8 +39,7 @@ func FindId(db *gorm.DB, w http.ResponseWriter, r *http.Request, name string, ta
 	return uint(id), nil
 }
 func Connection() (*gorm.DB, *sql.DB) {
-	dsn := os.Getenv("DSN")
-	db, err := gorm.Open(postgres.Open(dsn)) //!!!!!!!!!!
+	db, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
 		log.Println("Не удалось подлючиться к БД", err)
 		os.Exit(1)

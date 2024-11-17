@@ -1,7 +1,9 @@
 package main
 
 import (
-	h "home/pavel/Go_tasks/API/handlers"
+	h "API/handlers"
+	db "API/handlers/helpers"
+
 	"log"
 	"net/http"
 	"os"
@@ -20,10 +22,13 @@ import (
 // curl -X DELETE http://localhost:8080/category/2
 
 func main() {
+
 	err := godotenv.Load("env/dsn.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	db.MakeDsn()
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/item/{id}", h.GetInfoHandler).Methods("GET")

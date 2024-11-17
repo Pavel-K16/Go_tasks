@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	e "home/pavel/Go_tasks/API/entities"
-	h_ "home/pavel/Go_tasks/API/handlers/helpers"
+	e "API/entities"
+	h_ "API/handlers/helpers"
 	"io"
 	"log"
 	"net/http"
