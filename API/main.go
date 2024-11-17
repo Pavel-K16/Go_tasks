@@ -25,7 +25,7 @@ func main() {
 
 	err := godotenv.Load("env/dsn.env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Ошибка при загрузке .env файла")
 	}
 	db.MakeDsn()
 
